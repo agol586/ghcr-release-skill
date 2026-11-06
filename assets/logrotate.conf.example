@@ -1,0 +1,10 @@
+# Host-only: replace this with the absolute path to your app's mounted log file.
+/srv/app1/logs/app.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

@@ -1,0 +1,25 @@
+services:
+  app:
+    image: ${IMAGE:?Set IMAGE in .env}:${VERSION:?Set VERSION in .env}
+    env_file: .env
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    user: "10001:10001"
+    ports:
+      - "${BIND_IP:-127.0.0.1}:${HOST_PORT:-8080}:${APP_PORT:-8080}"
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Optional: reachable VPC/corporate DNS, never a host loopback IP in bridge mode.
+    # dns:
+    #   - ${DNS_SERVER:?Set DNS_SERVER in .env}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    logging:
+      # The entrypoint redirects stdout/stderr to ./logs/app.log; host rotates it.
+      driver: none

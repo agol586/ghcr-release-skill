@@ -1,0 +1,36 @@
+# GHCR Release Skill
+
+供 Codex 跨项目使用的 GitHub Actions 镜像发布技能：每个 CMD 使用独立 workflow，通过对应 release tag 发布到 GHCR。
+
+## 安装与使用
+
+首次安装到用户级技能目录：
+
+```sh
+git clone git@github.com:agol586/ghcr-release-skill.git ~/.agents/skills/ghcr-release
+```
+
+已安装时保留本地修改，再更新仓库。安装后在任意项目中调用：
+
+```text
+$ghcr-release 为当前项目配置每个 CMD 独立的 GHCR 发布 workflow
+```
+
+如果技能列表未刷新，重启 Codex。
+
+## 发布约定
+
+| Workflow | Tag | 构建目标 |
+|---|---|---|
+| `release-app1.yml` | `release/app1-v*` | `cmd/app1` |
+| `release-app2.yml` | `release/app2-v*` | `cmd/app2` |
+
+镜像格式为 `ghcr.io/<owner>/<IMAGE_REPO>-<CMD>:<version>`，`IMAGE_REPO` 默认取当前仓库名，也可通过 GitHub Actions 仓库变量自定义。`release/v*` 可分配给一个明确的默认应用。
+
+模板包含 Go 多阶段构建、配置和数据挂载、`.env` 注入、文本日志重定向到挂载目录、宿主机 logrotate 示例，以及可选的 DNS 和 host 网络配置。接入时按项目实际入口、配置和日志实现适配。
+
+- [技能指令](SKILL.md)
+- [模板与部署说明](references/usage.md)
+- [Workflow 模板](assets/release.yml)
+
+模板位于 `assets/`，安装技能本身不会触发镜像发布。

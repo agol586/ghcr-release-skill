@@ -1,0 +1,8 @@
+# Linux host networking; use with compose.yml and modern Docker Compose v2+.
+services:
+  app:
+    network_mode: host
+    ports: !reset []
+    extra_hosts: !reset []
+    # For a DNS resolver listening on the Linux host's loopback interface:
+    # dns: [127.0.0.53]

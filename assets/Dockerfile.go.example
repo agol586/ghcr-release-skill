@@ -1,0 +1,27 @@
+# Copy to the repository root as Dockerfile; pin GO_VERSION for your project.
+# For CGO, Node or Python, replace the build/runtime stages as appropriate.
+ARG GO_VERSION=1
+FROM golang:${GO_VERSION}-alpine AS builder
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+ARG APP_CMD
+RUN test -n "$APP_CMD" && test -d "cmd/$APP_CMD" \
+    && CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/app "./cmd/$APP_CMD"
+
+FROM alpine:3.23
+RUN apk add --no-cache ca-certificates tzdata \
+    && addgroup -g 10001 app \
+    && adduser -D -u 10001 -G app app \
+    && mkdir -p /app/config /app/logs /app/data \
+    && chown -R app:app /app
+WORKDIR /app
+COPY --from=builder --chown=app:app /out/app /app/bin/app
+COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+ENV CONFIG_FILE=/app/config/config.yml LOG_DIR=/app/logs DATA_DIR=/app/data
+USER 10001:10001
+EXPOSE 8080
+# Add an application-specific HEALTHCHECK here.
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["/app/bin/app"]

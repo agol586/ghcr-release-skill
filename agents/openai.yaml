@@ -1,0 +1,4 @@
+interface:
+  display_name: "GHCR Release"
+  short_description: "Configure an independent GHCR release workflow per CMD"
+  default_prompt: "Use $ghcr-release to configure one independent GHCR release workflow per CMD in this project, with separate tag triggers and runtime mounts."

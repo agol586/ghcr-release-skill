@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+**/.env
+**/.env.*
+config/
+logs/
+data/
+**/*.pem
+**/*.key
+node_modules/
