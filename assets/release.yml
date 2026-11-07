@@ -1,13 +1,10 @@
-# Default-app example. For other CMDs, change app1 and keep only their named tag filter.
+# Multiple CMDs: one copy per CMD, changing app1 in name, tags and APP_CMD.
+# Exactly one CMD: use tags: ['release/v*'] and set APP_CMD to that command.
 name: Release app1
 
 on:
   push:
-    tags:
-      - 'release/app1-v*'
-      # Keep these two filters in ONE default-app workflow only.
-      - 'v*'
-      - 'release/v*'
+    tags: ['release/app1-v*']
 
 env:
   APP_CMD: app1
