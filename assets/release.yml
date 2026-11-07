@@ -1,9 +1,13 @@
-# Copy as .github/workflows/release-app1.yml; change app1 for each CMD.
+# Default-app example. For other CMDs, change app1 and keep only their named tag filter.
 name: Release app1
 
 on:
   push:
-    tags: ['release/app1-v*']
+    tags:
+      - 'release/app1-v*'
+      # Keep these two filters in ONE default-app workflow only.
+      - 'v*'
+      - 'release/v*'
 
 env:
   APP_CMD: app1

@@ -22,10 +22,10 @@ $ghcr-release 为当前项目配置每个 CMD 独立的 GHCR 发布 workflow
 
 | Workflow | Tag | 构建目标 |
 |---|---|---|
-| `release-app1.yml` | `release/app1-v*` | `cmd/app1` |
+| `release-app1.yml`（默认应用） | `release/app1-v*`、`v*`、`release/v*` | `cmd/app1` |
 | `release-app2.yml` | `release/app2-v*` | `cmd/app2` |
 
-镜像格式为 `ghcr.io/<owner>/<IMAGE_REPO>-<CMD>:<version>`，`IMAGE_REPO` 默认取当前仓库名，也可通过 GitHub Actions 仓库变量自定义。`release/v*` 可分配给一个明确的默认应用。
+镜像格式为 `ghcr.io/<owner>/<IMAGE_REPO>-<CMD>:<version>`，`IMAGE_REPO` 默认取当前仓库名，也可通过 GitHub Actions 仓库变量自定义。`v*` 和 `release/v*` 只分配给一个明确的默认应用。模板以 app1 为默认应用，复制给其他 CMD 时删除这两个通用规则。支持 `v26.11.07` 等日期版本，并保留前导零。
 
 模板包含 Go 多阶段构建、配置和数据挂载、`.env` 注入、文本日志重定向到挂载目录、宿主机 logrotate 示例，以及可选的 DNS 和 host 网络配置。接入时按项目实际入口、配置和日志实现适配。
 

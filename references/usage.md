@@ -1,20 +1,20 @@
 # GHCR 发布模板
 
-每个 CMD 使用一份独立 workflow。将 `release.yml` 分别复制为目标项目的 `.github/workflows/release-app1.yml`、`release-app2.yml` 等，并修改各文件的 `name`、`on.push.tags` 和 `env.APP_CMD`。每次触发只构建该 workflow 指定的应用，共用根目录的 Dockerfile 和构建上下文，可访问共享的 `go.mod`、`internal/` 等文件。镜像统一命名为 `ghcr.io/<owner>/<IMAGE_REPO>-<CMD名>`。
+每个 CMD 使用一份独立 workflow。将 `release.yml` 分别复制为目标项目的 `.github/workflows/release-app1.yml`、`release-app2.yml` 等，并修改各文件的 `name`、`on.push.tags` 和 `env.APP_CMD`。模板中的 app1 是默认应用；复制给其他 CMD 时，删除 `v*` 和 `release/v*`，仅保留对应的 `release/<CMD>-v*`。每次触发只构建该 workflow 指定的应用，共用根目录的 Dockerfile 和构建上下文，可访问共享的 `go.mod`、`internal/` 等文件。镜像统一命名为 `ghcr.io/<owner>/<IMAGE_REPO>-<CMD名>`。
 
 `owner` 自动取当前仓库所属用户或组织；`IMAGE_REPO` 默认取当前仓库名，也可通过 GitHub Actions 仓库变量 `IMAGE_REPO` 自定义（Settings → Secrets and variables → Actions → Variables）。例如仓库 `acme/orders` 默认发布 `ghcr.io/acme/orders-app1`；设置 `IMAGE_REPO=my-platform` 后发布 `ghcr.io/acme/my-platform-app1`。名称统一转小写，变量只填镜像前缀，不含 owner、斜杠或版本。下表的 `owner/repo` 为占位示例。
 
 | Workflow 文件 | Tag 规则 | 固定构建目标 | 发布镜像示例 |
 |---|---|---|---|
-| `release-app1.yml` | `release/app1-v*` | `APP_CMD: app1` | `ghcr.io/owner/repo-app1:v1.2.3` |
+| `release-app1.yml`（默认应用） | `release/app1-v*`、`v*`、`release/v*` | `APP_CMD: app1` | `ghcr.io/owner/repo-app1:v1.2.3` |
 | `release-app2.yml` | `release/app2-v*` | `APP_CMD: app2` | `ghcr.io/owner/repo-app2:v1.2.3` |
 | `release-app3.yml` | `release/app3-v*` | `APP_CMD: app3` | `ghcr.io/owner/repo-app3:v1.2.3` |
 
 例如推送 `release/app1-v1.2.3` 只触发 `release-app1.yml`，只构建 `cmd/app1`。无需 matrix、目录扫描或 Python；Bash 仅提取版本并生成镜像名。
 
-若需要 `release/v*`，将它分配给一个明确的默认应用：例如仅在 `release-server.yml` 中使用 `tags: ['release/v*']`、`APP_CMD: server`。它只发布 `cmd/server`；不要在多个 workflow 中重复配置这个通用 tag 规则。
+裸 tag `v26.11.07` 和 `release/v26.11.07` 只触发默认应用的 workflow，镜像版本均为 `v26.11.07`。如默认应用是 server，就仅在 `release-server.yml` 中保留 `v*`、`release/v*` 并设置 `APP_CMD: server`；其他 workflow 只配置各自带 CMD 名的 tag。
 
-应用名支持小写字母、数字和连字符；版本支持 `v1.2.3-rc.1`，不支持含 `+` 的版本。另发布完整提交 SHA 标签，摘要写入 Actions Summary；不自动更新 `latest`。发布标签应只指向通过项目 CI 的提交，避免移动或重复使用版本标签。
+应用名支持小写字母、数字和连字符；版本支持 `v1.2.3-rc.1` 和日期式 `v26.11.07`，保留前导零，不做 SemVer 归一化；不支持含 `+` 的版本。另发布完整提交 SHA 标签，摘要写入 Actions Summary；不自动更新 `latest`。发布标签应只指向通过项目 CI 的提交，避免移动或重复使用版本标签。
 
 ## 项目接入
 
