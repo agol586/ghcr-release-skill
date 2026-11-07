@@ -38,7 +38,7 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#release/}"
           version="${version#"$APP_CMD"-}"
-          [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+([.-][A-Za-z0-9]+)*)?$ ]] || { echo "Invalid version" >&2; exit 1; }
+          [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+[a-z]?(-[A-Za-z0-9]+([.-][A-Za-z0-9]+)*)?$ ]] || { echo "Invalid version" >&2; exit 1; }
           [[ "$IMAGE_REPO" =~ ^[A-Za-z0-9]+(([._]|__|-+)[A-Za-z0-9]+)*$ ]] || { echo "Invalid IMAGE_REPO" >&2; exit 1; }
           printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
           printf 'image=ghcr.io/%s/%s-%s\n' "$GITHUB_REPOSITORY_OWNER" "$IMAGE_REPO" "$APP_CMD" | tr '[:upper:]' '[:lower:]' >> "$GITHUB_OUTPUT"
@@ -60,6 +60,7 @@ jobs:
             APP_CMD=${{ env.APP_CMD }}
           platforms: linux/amd64
           push: true
+          # Publish only the exact version and commit SHA; never add latest.
           tags: |
             ${{ steps.release.outputs.image }}:${{ steps.release.outputs.version }}
             ${{ steps.release.outputs.image }}:sha-${{ github.sha }}

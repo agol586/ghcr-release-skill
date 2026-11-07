@@ -14,7 +14,7 @@
 
 裸 tag `v26.11.07` 和 `release/v26.11.07` 只触发默认应用的 workflow，镜像版本均为 `v26.11.07`。如默认应用是 server，就仅在 `release-server.yml` 中保留 `v*`、`release/v*` 并设置 `APP_CMD: server`；其他 workflow 只配置各自带 CMD 名的 tag。
 
-应用名支持小写字母、数字和连字符；版本支持 `v1.2.3-rc.1` 和日期式 `v26.11.07`，保留前导零，不做 SemVer 归一化；不支持含 `+` 的版本。另发布完整提交 SHA 标签，摘要写入 Actions Summary；不自动更新 `latest`。发布标签应只指向通过项目 CI 的提交，避免移动或重复使用版本标签。
+应用名支持小写字母、数字和连字符；版本支持 `v1.2.3-rc.1` 和日期式 `v26.11.07`；同一天后续版本使用 `v26.11.07b`、`v26.11.07c` 等单个小写字母后缀，保留前导零及后缀，不做 SemVer 归一化；不支持含 `+` 的版本。仅发布完整版本标签及提交 SHA 标签，摘要写入 Actions Summary；禁止自动创建、更新或晋升 `latest`。如改用 docker/metadata-action，必须设置 `flavor: latest=false`。发布标签应只指向通过项目 CI 的提交，避免移动或重复使用版本标签。
 
 ## 项目接入
 
