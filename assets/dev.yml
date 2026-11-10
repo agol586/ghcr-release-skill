@@ -1,0 +1,81 @@
+# One workflow for all CMDs: pushes to dev or dev/* build every listed CMD as <IMAGE_REPO>-<CMD>:dev[-<name>].
+# Keep the explicit CMD list in sync with the project's cmd/ directories; do not auto-discover.
+name: Dev images
+
+on:
+  push:
+    branches: ['dev', 'dev/**']
+
+env:
+  IMAGE_REPO: ${{ vars.IMAGE_REPO || github.event.repository.name }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        cmd: [app1, app2]
+    env:
+      APP_CMD: ${{ matrix.cmd }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set version and image
+        id: release
+        shell: bash
+        run: |
+          [[ "$IMAGE_REPO" =~ ^[A-Za-z0-9]+(([._]|__|-+)[A-Za-z0-9]+)*$ ]] || { echo "Invalid IMAGE_REPO" >&2; exit 1; }
+          name="${GITHUB_REF_NAME#dev}"
+          name="$(printf '%s' "${name#/}" | tr -c 'A-Za-z0-9._\n-' '-')"
+          version="dev${name:+-$name}"
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+          printf 'image=ghcr.io/%s/%s-%s\n' "$GITHUB_REPOSITORY_OWNER" "$IMAGE_REPO" "$APP_CMD" | tr '[:upper:]' '[:lower:]' >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          build-args: |
+            APP_CMD=${{ env.APP_CMD }}
+          platforms: linux/amd64
+          push: true
+          # Publish only the dev version and commit SHA; never add latest.
+          tags: |
+            ${{ steps.release.outputs.image }}:${{ steps.release.outputs.version }}
+            ${{ steps.release.outputs.image }}:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.release.outputs.version }}
+          cache-from: type=gha,scope=${{ env.APP_CMD }}-dev
+          cache-to: type=gha,mode=max,scope=${{ env.APP_CMD }}-dev
+
+      - name: Record image digest
+        env:
+          IMAGE: ${{ steps.release.outputs.image }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          printf 'Image digest: `%s@%s`\n' "$IMAGE" "$DIGEST" >> "$GITHUB_STEP_SUMMARY"
