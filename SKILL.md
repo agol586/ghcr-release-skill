@@ -24,6 +24,11 @@ Start from [assets/release.yml](assets/release.yml), which shows one workflow fo
 - Build with repository-root context and `APP_CMD=<CMD>` so shared modules and source directories remain accessible. The Dockerfile must actually consume this argument.
 - Publish the version and full commit SHA tags, and record the digest. Use `GITHUB_TOKEN` with `packages: write` only on publishing jobs, per-app caches and bounded build time. Never automatically create, update or promote the `latest` image tag. Publish only the explicit release version and commit SHA tags; if adapting docker/metadata-action, explicitly set `flavor: latest=false` and omit any latest tag rule.
 
+## Subcommands and dev images
+
+- One CMD builds one image, even when it has several subcommands. Do not create workflows or images per subcommand; select the subcommand at runtime through Compose `command:`/arguments (the entrypoint passes them through `exec "$@"`).
+- Dev images use a single workflow for all CMDs, based on [assets/dev.yml](assets/dev.yml) (copy to `.github/workflows/dev.yml`). It triggers only on pushes to the `dev` or `dev/*` branches and builds each CMD in an explicit `matrix.cmd` list (no discovery; keep it equal to the project's executable CMDs). Images are `ghcr.io/<owner>/<IMAGE_REPO>-<CMD>:dev-<branch>` (same image name as release; `dev` → `dev`, `dev/login` → `dev-login`) plus `sha-<full sha>`; never `latest`. It does not respond to release tags, and release workflows do not respond to the `dev` branch.
+
 Choose the actual executable CMDs from project evidence while implementing the workflows. Each generated workflow builds only its fixed application; do not add runtime scanning or publish-all behavior. For a different layout or a single app without `cmd/`, adapt the Dockerfile and fixed target to its existing entrypoint without restructuring the project. Document the workflow-to-tag-to-command mapping.
 
 Use [assets/Dockerfile.go.example](assets/Dockerfile.go.example) only for compatible Go projects. Select the Go version from project evidence, account for CGO and runtime libraries, and preserve frontend builds, embedded assets, templates and certificates. Other languages should retain their native build/runtime stages while supporting the selected app mapping. Handle modules without `go.sum` according to their actual dependency setup.

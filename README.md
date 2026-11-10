@@ -30,6 +30,12 @@ $ghcr-release 为当前项目配置每个 CMD 独立的 GHCR 发布 workflow
 
 镜像格式为 `ghcr.io/<owner>/<IMAGE_REPO>-<CMD>:<version>`，`IMAGE_REPO` 默认取当前仓库名，也可通过 GitHub Actions 仓库变量自定义。支持日期版本及同日后缀，例如单 CMD 的 `release/v26.11.07b`、多 CMD 的 `release/cmd11-v26.11.07c`；镜像版本完整保留前导零和后缀。仅发布明确的版本和提交 SHA 标签，不自动创建或更新 `latest`。
 
+同一 CMD 的不同 subcmd 共用一个镜像，通过 Compose `command:` 在运行时选择，不单独拆 workflow 或镜像。
+
+## Dev 镜像
+
+所有 CMD 共用一个 `dev.yml`，仅在 push 到 `dev` 或 `dev/*` 分支时触发，通过显式的 `matrix.cmd` 列表构建每个 CMD，镜像为 `ghcr.io/<owner>/<IMAGE_REPO>-<CMD>:dev-<分支名>`（与 release 同名，`dev` → `dev`，`dev/login` → `dev-login`）和 `sha-<完整提交>`，不创建 `latest`。
+
 模板包含 Go 多阶段构建、配置和数据挂载、`.env` 注入、文本日志重定向到挂载目录、宿主机 logrotate 示例，以及可选的 DNS 和 host 网络配置。接入时按项目实际入口、配置和日志实现适配。
 
 - [技能指令](SKILL.md)

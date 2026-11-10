@@ -18,6 +18,10 @@
 
 无需 matrix、目录扫描或 Python；Bash 仅提取版本并生成镜像名。项目从单 CMD 变为多 CMD 时，应将原有 `release/v*` 规则替换为各自带 CMD 名的规则。
 
+## Dev 镜像
+
+将 `dev.yml` 复制为 `.github/workflows/dev.yml`，把 `matrix.cmd` 改为项目全部可执行 CMD。该 workflow 只在 push 到 `dev` 或 `dev/*` 分支时触发，为每个 CMD 发布 `ghcr.io/<owner>/<IMAGE_REPO>-<CMD>:dev-<分支名>`（与 release 同名，`dev` → `dev`，`dev/login` → `dev-login`）和 `sha-<完整提交>`，不发布 `latest`。同一 CMD 的不同 subcmd 共用该 CMD 的镜像，运行时通过 Compose `command:` 选择。
+
 应用名支持小写字母、数字和连字符；版本支持 `v1.2.3-rc.1` 和日期式 `v26.11.07`；同一天后续版本使用 `v26.11.07b`、`v26.11.07c` 等单个小写字母后缀，保留前导零及后缀，不做 SemVer 归一化；不支持含 `+` 的版本。仅发布完整版本标签及提交 SHA 标签，摘要写入 Actions Summary；禁止自动创建、更新或晋升 `latest`。如改用 docker/metadata-action，必须设置 `flavor: latest=false`。发布标签应只指向通过项目 CI 的提交，避免移动或重复使用版本标签。
 
 ## 项目接入
